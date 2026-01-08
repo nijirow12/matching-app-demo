@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
+import { motion, useMotionValue, useTransform, PanInfo, useMotionValueEvent } from "framer-motion";
 import { useState } from "react";
 import { Profile } from "@/lib/mockData";
 import { X, Heart } from "lucide-react";
@@ -25,12 +25,18 @@ export function SwipeCard({ profile, onSwipe, style }: SwipeCardProps) {
 
     const [isDragging, setIsDragging] = useState(false);
 
+    // xの値が0に戻ったらドラッグ状態を解除（念のための安全策）
+    useMotionValueEvent(x, "change", (latest) => {
+        if (latest === 0 && isDragging) {
+            setIsDragging(false);
+        }
+    });
+
     const handleDragStart = () => {
         setIsDragging(true);
     };
 
     const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-        setIsDragging(false);
         const threshold = 100;
         if (info.offset.x > threshold) {
             setExitX(200);
@@ -41,6 +47,7 @@ export function SwipeCard({ profile, onSwipe, style }: SwipeCardProps) {
         } else {
             // 元に戻る際は明示的にモーション値をリセット
             x.set(0);
+            setIsDragging(false);
         }
     };
 
