@@ -148,16 +148,16 @@ export default function Home() {
   };
 
   if (loading || checkingProfile) {
-    return <div className="flex h-screen items-center justify-center text-rose-500 font-bold animate-pulse">Loading profiles...</div>;
+    return <div className="flex h-full items-center justify-center text-rose-500 font-bold animate-pulse">Loading profiles...</div>;
   }
 
   return (
-    <div className="flex flex-col items-center justify-start pt-4 min-h-[calc(100vh-64px)] bg-slate-100 overflow-hidden relative">
-      <div className="w-full max-w-[380px] h-[68vh] relative z-0">
+    <div className="flex flex-col items-center justify-between h-full bg-slate-100 relative pb-[env(safe-area-inset-bottom)]">
+
+      {/* Card Stack Container - Adjust height dynamically */}
+      <div className="w-full max-w-md h-full max-h-[72dvh] mt-2 relative px-2 flex-shrink-0">
         {profiles.length > 0 ? (
           profiles.map((profile, index) => {
-            // 一番手前だけ操作可能にする
-            const isFront = index === 0;
             return (
               <SwipeCard
                 key={profile.id}
@@ -183,14 +183,14 @@ export default function Home() {
         )}
       </div>
 
-      {/* Action Buttons */}
-      <div className="mt-auto mb-8 flex items-center gap-8 z-20">
+      {/* Action Buttons - Fixed at bottom with safe area */}
+      <div className="flex items-center justify-center gap-10 w-full pb-6 pt-2">
         {/* Nope */}
         <button
           onClick={() => profiles.length > 0 && handleSwipe("left", profiles[0].id)}
           className="w-16 h-16 bg-white rounded-full text-rose-500 shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform border border-gray-100"
         >
-          <X size={36} strokeWidth={3} />
+          <X size={32} strokeWidth={3} />
         </button>
 
         {/* Like */}
@@ -198,7 +198,7 @@ export default function Home() {
           onClick={() => profiles.length > 0 && handleSwipe("right", profiles[0].id)}
           className="w-16 h-16 bg-white rounded-full text-green-400 shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform border border-gray-100"
         >
-          <Heart size={36} strokeWidth={0} fill="currentColor" />
+          <Heart size={32} strokeWidth={0} fill="currentColor" />
         </button>
       </div>
 

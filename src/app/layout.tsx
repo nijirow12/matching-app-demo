@@ -34,13 +34,13 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="ja">
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 overflow-hidden`}
+          className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 h-[100dvh] w-screen overflow-hidden overscroll-none touch-pan-y`}
         >
           <SignedIn>
             <Header />
-            <div className="pt-16 h-screen overflow-auto">
+            <main className="h-[100dvh] pt-16 w-full overflow-hidden relative">
               {children}
-            </div>
+            </main>
           </SignedIn>
           <SignedOut>
             <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-rose-500 to-orange-500 text-white p-6 text-center">

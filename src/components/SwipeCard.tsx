@@ -48,7 +48,7 @@ export function SwipeCard({ profile, onSwipe, style }: SwipeCardProps) {
             onDragEnd={handleDragEnd}
             animate={exitX ? { x: exitX, opacity: 0 } : { x: 0, opacity: 1 }}
             transition={{ duration: 0.2 }}
-            className="absolute top-0 w-full max-w-sm h-[600px] cursor-grab active:cursor-grabbing bg-white rounded-3xl shadow-xl overflow-hidden select-none"
+            className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing bg-white rounded-3xl shadow-xl overflow-hidden select-none"
         >
             {/* 画像 */}
             <div className="relative h-full w-full">
