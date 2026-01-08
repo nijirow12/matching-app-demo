@@ -47,27 +47,52 @@ export default function Home() {
 
         setCheckingProfile(false);
 
-        // 2. 他のユーザーを取得 (自分以外)
-        // 本来は位置情報(PostGIS)で近くのユーザーを絞り込むが、まずは全件取得
-        const { data: otherUsers, error } = await supabase
+        // 2. 自分のプロフィールから興味対象を取得
+        const { data: currentUserProfile } = await supabase
           .from("profiles")
-          .select("*")
-          .neq("id", user.id)
-          .limit(20);
+          .select("interested_in")
+          .eq("id", user.id)
+          .single();
+
+        const targetGenders = currentUserProfile?.interested_in || ['female'];
+
+        // 3. RPCを使ってランダムかつ未スワイプのユーザーを取得
+        const { data: users, error } = await supabase.rpc('get_random_profiles', {
+          current_user_id: user.id,
+          target_genders: targetGenders,
+          limit_count: 10
+        });
 
         if (error) {
-          console.error(error);
-        }
+          console.error("RPC Error:", error);
+          // RPC失敗時のフォールバック
+          const { data: fallbackUsers } = await supabase
+            .from("profiles")
+            .select("*")
+            .neq("id", user.id)
+            .in("gender", targetGenders) // 最低限性別フィルタだけは機能させる
+            .limit(20);
 
-        if (otherUsers) {
-          // Profile型に合わせる (distanceKmは仮計算または0)
-          const formattedUsers: Profile[] = otherUsers.map(u => ({
+          if (fallbackUsers) {
+            const formattedFallback = fallbackUsers.map((u: any) => ({
+              id: u.id,
+              name: u.name,
+              age: u.age,
+              bio: u.bio,
+              images: u.images || ["https://placehold.co/600x800?text=No+Image"],
+              distanceKm: 0,
+            }));
+            // 重複スワイプのフィルタリングは省略（本来やるべき）
+            setProfiles(formattedFallback);
+          }
+        } else if (users) {
+          const formattedUsers = users.map((u: any) => ({
             id: u.id,
             name: u.name,
             age: u.age,
             bio: u.bio,
-            images: u.images || ["https://placehold.co/600x800?text=No+Image"], // 画像がない場合のダミー
-            distanceKm: 0, // あとで計算実装
+            images: u.images || ["https://placehold.co/600x800?text=No+Image"],
+            distanceKm: 0,
           }));
           setProfiles(formattedUsers);
         }

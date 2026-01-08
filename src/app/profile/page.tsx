@@ -13,6 +13,8 @@ export default function ProfilePage() {
     const [name, setName] = useState("");
     const [age, setAge] = useState("");
     const [bio, setBio] = useState("");
+    const [gender, setGender] = useState("male");
+    const [interestedIn, setInterestedIn] = useState<string[]>(["female"]);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
     const [images, setImages] = useState<string[]>([]);
@@ -37,12 +39,15 @@ export default function ProfilePage() {
                 setAge(data.age?.toString() || "");
                 setBio(data.bio || "");
                 setImages(data.images || []);
+                setGender(data.gender || "male");
+                setInterestedIn(data.interested_in || ["female"]);
             }
         };
 
         loadProfile();
     }, [isLoaded, user, getToken]);
 
+    // ... (image upload logic remains same)
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || e.target.files.length === 0) return;
         if (!user) return;
@@ -77,6 +82,14 @@ export default function ProfilePage() {
         }
     };
 
+    const toggleInterested = (type: string) => {
+        if (interestedIn.includes(type)) {
+            setInterestedIn(prev => prev.filter(t => t !== type));
+        } else {
+            setInterestedIn(prev => [...prev, type]);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user) return;
@@ -93,7 +106,9 @@ export default function ProfilePage() {
                 name,
                 age: parseInt(age),
                 bio,
-                images, // 画像配列を保存
+                gender,
+                interested_in: interestedIn,
+                images,
                 updated_at: new Date().toISOString(),
             };
 
@@ -104,7 +119,6 @@ export default function ProfilePage() {
             }
 
             setMessage("プロフィールを保存しました！");
-            // 保存成功したらホームへ (任意)
             setTimeout(() => router.push("/"), 1000);
         } catch (error: any) {
             console.error(error);
@@ -114,11 +128,8 @@ export default function ProfilePage() {
         }
     };
 
-    // ... (previous state and hooks)
-
     const handleSignOut = async () => {
-        // ClerkのSignOutButtonなどを使うか、useClerk().signOut()
-        // ここではLayoutにUserButtonがないため、手動ログアウトボタンを用意
+        // ...
     };
 
     if (!isLoaded) return <div className="p-8 text-center text-rose-500">Loading...</div>;
@@ -133,17 +144,13 @@ export default function ProfilePage() {
     };
 
     return (
-        <div className="min-h-screen pb-20">
+        <div className="min-h-screen pb-32 overflow-y-auto bg-gray-50">
             <div className="max-w-md mx-auto p-4 flex flex-col items-center gap-8">
 
                 {/* Preview Section */}
                 <div className="w-full flex flex-col items-center">
                     <h2 className="text-gray-400 text-sm font-bold uppercase tracking-widest mb-4">Preview</h2>
                     <div className="relative w-full h-[500px] pointer-events-none transform scale-95 origin-top">
-                        {/* SwipeCardを再利用するが、Drag無効化などはComponent側で制御必要。
-                     今回は簡易的に同じものを使うが、SwipeCardに readonly propsを追加するのが理想。
-                     ここでは drag="x" があるので動いてしまうが、previewとしては許容範囲。
-                 */}
                         <div className="absolute inset-0 rounded-3xl overflow-hidden shadow-2xl bg-white">
                             <img
                                 src={currentProfile.images[0]}
@@ -222,6 +229,48 @@ export default function ProfilePage() {
                                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent outline-none transition-all bg-gray-50 text-gray-800 font-medium"
                                     placeholder="25"
                                 />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">I am a</label>
+                                    <div className="relative">
+                                        <select
+                                            value={gender}
+                                            onChange={(e) => setGender(e.target.value)}
+                                            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg appearance-none focus:ring-2 focus:ring-rose-500 outline-none text-gray-800 font-medium"
+                                        >
+                                            <option value="male">Male</option>
+                                            <option value="female">Female</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Interested In</label>
+                                    <div className="flex bg-gray-50 rounded-lg border border-gray-200 overflow-hidden h-[42px]">
+                                        <button
+                                            type="button"
+                                            onClick={() => toggleInterested('male')}
+                                            className={`flex-1 text-sm font-bold transition-colors ${interestedIn.includes('male') ? 'bg-rose-500 text-white' : 'text-gray-400 hover:bg-gray-100'}`}
+                                        >M</button>
+                                        <div className="w-px bg-gray-200"></div>
+                                        <button
+                                            type="button"
+                                            onClick={() => toggleInterested('female')}
+                                            className={`flex-1 text-sm font-bold transition-colors ${interestedIn.includes('female') ? 'bg-rose-500 text-white' : 'text-gray-400 hover:bg-gray-100'}`}
+                                        >F</button>
+                                        <div className="w-px bg-gray-200"></div>
+                                        <button
+                                            type="button"
+                                            onClick={() => toggleInterested('other')}
+                                            className={`flex-1 text-sm font-bold transition-colors ${interestedIn.includes('other') ? 'bg-rose-500 text-white' : 'text-gray-400 hover:bg-gray-100'}`}
+                                        >O</button>
+                                    </div>
+                                </div>
                             </div>
 
                             <div>

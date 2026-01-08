@@ -1,6 +1,14 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import {
+  ClerkProvider,
+  SignInButton,
+  SignUpButton,
+  SignedIn,
+  SignedOut,
+} from "@clerk/nextjs";
+import { Header } from "@/components/Header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -11,17 +19,6 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-
-import {
-  ClerkProvider,
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-} from "@clerk/nextjs";
-import "./globals.css";
-import Link from "next/link";
-import { User, Flame, MessageCircle } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Matching App",
@@ -40,50 +37,47 @@ export default function RootLayout({
           className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 overflow-hidden`}
         >
           <SignedIn>
-            <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-sm border-b border-gray-100 h-16">
-              <div className="max-w-xl mx-auto h-full px-6 flex items-center justify-between">
-
-                {/* Profile Link */}
-                <Link href="/profile" className="p-2 text-gray-300 hover:text-rose-500 transition-colors">
-                  <User size={28} strokeWidth={2.5} />
-                </Link>
-
-                {/* Main Logo (Home) */}
-                <Link href="/" className="p-2">
-                  <div className="bg-gradient-to-tr from-rose-500 to-orange-500 text-white rounded-full p-1.5 shadow-lg hover:scale-105 transition-transform">
-                    <Flame size={28} fill="currentColor" strokeWidth={0} />
-                  </div>
-                </Link>
-
-                {/* Chat Link (Placeholder) */}
-                <Link href="/chat" className="p-2 text-gray-300 hover:text-rose-500 transition-colors">
-                  <MessageCircle size={28} strokeWidth={2.5} />
-                </Link>
-
-              </div>
-            </header>
-            <main className="pt-16 h-[100dvh]">
+            <Header />
+            <div className="pt-16 h-screen overflow-auto">
               {children}
-            </main>
+            </div>
           </SignedIn>
-
           <SignedOut>
-            <div className="flex min-h-screen flex-col items-center justify-center p-4">
-              <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-500 mb-8">
-                Matching App
+            <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-rose-500 to-orange-500 text-white p-6 text-center">
+              <div className="mb-8 bg-white/20 p-6 rounded-full shadow-2xl backdrop-blur-sm animate-pulse">
+                <svg
+                  width="80"
+                  height="80"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-2.222-2.222-3-3 2.048 2.653.862 5.723-.5 6.772-1.635 1.071-2.663-1.928-2.5-3.5 0 2.5 2.5 7 8 7" />
+                  <path d="M15.5 14.5A2.5 2.5 0 0 1 13 12c0-1.38.5-2 1-3 1.072-2.143 2.222-2.222 3-3-2.048 2.653-.862 5.723.5 6.772 1.635 1.071 2.663-1.928 2.5-3.5 0 2.5-2.5 7-8 7" />
+                </svg>
+              </div>
+              <h1 className="text-4xl font-extrabold mb-4 tracking-tight drop-shadow-md">
+                Find Your Match.
               </h1>
-              <div className="flex gap-4">
+              <p className="text-lg opacity-90 max-w-sm mb-10 leading-relaxed">
+                Swipe right to connect with people nearby. Start your journey today!
+              </p>
+              <div className="flex flex-col gap-4 w-full max-w-xs">
+                <SignUpButton mode="modal">
+                  <button className="w-full bg-white text-rose-600 font-bold py-4 rounded-xl shadow-lg hover:bg-gray-50 active:scale-95 transition-all">
+                    Create Account
+                  </button>
+                </SignUpButton>
                 <SignInButton mode="modal">
-                  <button className="px-6 py-3 bg-rose-500 text-white rounded-full font-bold shadow-lg hover:bg-rose-600 transition-all">
+                  <button className="w-full bg-transparent border-2 border-white/40 text-white font-bold py-4 rounded-xl hover:bg-white/10 active:scale-95 transition-all">
                     Sign In
                   </button>
                 </SignInButton>
-                <SignUpButton mode="modal">
-                  <button className="px-6 py-3 bg-white text-gray-800 border border-gray-200 rounded-full font-bold shadow-sm hover:bg-gray-50 transition-all">
-                    Sign Up
-                  </button>
-                </SignUpButton>
               </div>
+              <p className="mt-12 text-xs opacity-60">© 2024 MatchingApp Inc.</p>
             </div>
           </SignedOut>
         </body>
