@@ -51,40 +51,41 @@ export function SwipeCard({ profile, onSwipe, style }: SwipeCardProps) {
             className="absolute top-0 w-full max-w-sm h-[600px] cursor-grab active:cursor-grabbing bg-white rounded-3xl shadow-xl overflow-hidden select-none"
         >
             {/* 画像 */}
-            <div className="relative h-4/5 w-full">
+            <div className="relative h-full w-full">
                 <img
                     src={profile.images[0]}
                     alt={profile.name}
                     className="h-full w-full object-cover pointer-events-none"
+                    draggable={false}
                 />
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60" />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/90" />
 
                 {/* Like印 */}
                 <motion.div
                     style={{ opacity: likeOpacity }}
-                    className="absolute top-10 left-10 border-4 border-green-400 rounded-lg px-4 py-2 rotate-[-15deg] z-10"
+                    className="absolute top-10 left-6 border-[6px] border-green-400 rounded-lg px-4 py-1 rotate-[-15deg] z-10"
                 >
-                    <span className="text-4xl font-bold text-green-400 uppercase tracking-widest">LIKE</span>
+                    <span className="text-4xl font-extrabold text-green-400 uppercase tracking-widest">LIKE</span>
                 </motion.div>
 
                 {/* Nope印 */}
                 <motion.div
                     style={{ opacity: nopeOpacity }}
-                    className="absolute top-10 right-10 border-4 border-red-500 rounded-lg px-4 py-2 rotate-[15deg] z-10"
+                    className="absolute top-10 right-6 border-[6px] border-rose-500 rounded-lg px-4 py-1 rotate-[15deg] z-10"
                 >
-                    <span className="text-4xl font-bold text-red-500 uppercase tracking-widest">NOPE</span>
+                    <span className="text-4xl font-extrabold text-rose-500 uppercase tracking-widest">NOPE</span>
                 </motion.div>
-            </div>
 
-            {/* テキスト情報 */}
-            <div className="h-1/5 p-4 flex flex-col justify-center">
-                <div className="flex items-baseline gap-2">
-                    <h2 className="text-2xl font-bold text-gray-800">{profile.name}</h2>
-                    <span className="text-xl text-gray-500">{profile.age}</span>
-                </div>
-                <p className="text-gray-600 text-sm mt-1 line-clamp-2">{profile.bio}</p>
-                <div className="text-gray-400 text-xs mt-2 flex items-center gap-1">
-                    📍 {profile.distanceKm} km先
+                {/* テキスト情報 (オーバーレイ) */}
+                <div className="absolute bottom-0 left-0 right-0 p-6 text-white pb-8">
+                    <div className="flex items-baseline gap-3 mb-1">
+                        <h2 className="text-4xl font-bold drop-shadow-md">{profile.name}</h2>
+                        <span className="text-2xl font-medium opacity-90">{profile.age}</span>
+                    </div>
+                    <div className="flex items-center gap-1 mb-3 text-sm font-medium opacity-80">
+                        <span>📍 {profile.distanceKm || 1} km away</span>
+                    </div>
+                    <p className="text-base leading-relaxed opacity-90 line-clamp-3 shadow-sm">{profile.bio}</p>
                 </div>
             </div>
         </motion.div>

@@ -21,8 +21,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Matching App",
-  description: "Find your perfect match.",
+  title: "MUSASHINO MATCHES",
+  description: "Find your perfect match in Musashino.",
 };
 
 export default function RootLayout({
@@ -60,7 +60,7 @@ export default function RootLayout({
                 </svg>
               </div>
               <h1 className="text-4xl font-extrabold mb-4 tracking-tight drop-shadow-md">
-                Find Your Match.
+                MUSASHINO MATCHES
               </h1>
               <p className="text-lg opacity-90 max-w-sm mb-10 leading-relaxed">
                 Swipe right to connect with people nearby. Start your journey today!

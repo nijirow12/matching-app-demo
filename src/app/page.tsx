@@ -1,11 +1,9 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { SwipeCard } from "@/components/SwipeCard";
 import { MOCK_PROFILES, Profile } from "@/lib/mockData";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, X, Heart, Star, Zap, RotateCw } from "lucide-react";
 import { createSupabaseClient } from "@/lib/supabase";
 
 export default function Home() {
@@ -13,12 +11,6 @@ export default function Home() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
 
-  // 配列の先頭が一番手前のカードになるように今回はそのまま使用するか、
-  // あるいはpopしていく形式にするか。
-  // 通常、スタックUIではindexが大きい方が手前、または0が手前で重なり順(zIndex)を制御する。
-  // ここでは profiles[0] を一番手前として扱うシンプルな実装にします。
-
-  // MOCK_PROFILESは初期値から削除、最初は空配列
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastDirection, setLastDirection] = useState<string | null>(null);
@@ -82,7 +74,6 @@ export default function Home() {
               images: u.images || ["https://placehold.co/600x800?text=No+Image"],
               distanceKm: 0,
             }));
-            // 重複スワイプのフィルタリングは省略（本来やるべき）
             setProfiles(formattedFallback);
           }
         } else if (users) {
@@ -151,18 +142,16 @@ export default function Home() {
   };
 
   const handleReset = () => {
-    // リセット機能はデバッグ用に残すが、本来は「もうユーザーがいません」となるべき
-    // ここではページリロードするだけにする
     window.location.reload();
   };
 
   if (loading || checkingProfile) {
-    return <div className="flex h-screen items-center justify-center text-rose-500 font-bold">Loading...</div>;
+    return <div className="flex h-screen items-center justify-center text-rose-500 font-bold animate-pulse">Loading profiles...</div>;
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] bg-gray-100 overflow-hidden relative">
-      <div className="w-full max-w-sm h-[600px] relative">
+    <div className="flex flex-col items-center justify-start pt-4 min-h-[calc(100vh-64px)] bg-slate-100 overflow-hidden relative">
+      <div className="w-full max-w-[380px] h-[68vh] relative z-0">
         {profiles.length > 0 ? (
           profiles.map((profile, index) => {
             // 一番手前だけ操作可能にする
@@ -173,51 +162,72 @@ export default function Home() {
                 profile={profile}
                 onSwipe={(dir) => handleSwipe(dir, profile.id)}
                 style={{
-                  zIndex: profiles.length - index, // 手前ほどzIndex高く
-                  // 後ろのカードは少し小さく見せるなどの演出も本来はここに
+                  zIndex: profiles.length - index,
                 }}
               />
             );
           })
         ) : (
-          <div className="flex flex-col items-center justify-center h-full text-gray-500">
-            <p className="text-xl mb-4">No more profiles!</p>
+          <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-4">
+            <div className="w-24 h-24 rounded-full bg-gray-200 animate-pulse" />
+            <p className="text-lg font-medium">No more profiles around you.</p>
             <button
               onClick={handleReset}
-              className="flex items-center gap-2 px-6 py-3 bg-rose-500 text-white rounded-full font-bold shadow-lg hover:bg-rose-600 transition-colors"
+              className="px-8 py-3 bg-gradient-to-r from-rose-500 to-orange-500 text-white rounded-full font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
             >
-              <RefreshCw size={20} />
-              Reset
+              Search Again
             </button>
           </div>
         )}
       </div>
 
-      {/* アクションボタン */}
-      <div className="mt-8 flex gap-6 z-10">
+      {/* Action Buttons */}
+      <div className="mt-auto mb-8 flex items-center gap-5 z-20">
+        {/* Rewind (Dummy) */}
+        <button
+          onClick={() => alert("Rewind requires Premium!")}
+          className="w-12 h-12 bg-white rounded-full text-yellow-500 shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform border border-gray-100"
+        >
+          <RotateCw size={22} strokeWidth={2.5} />
+        </button>
+
+        {/* Nope */}
         <button
           onClick={() => profiles.length > 0 && handleSwipe("left", profiles[0].id)}
-          className="w-14 h-14 bg-white rounded-full shadow-lg flex items-center justify-center text-red-500 text-2xl hover:scale-110 active:scale-95 transition-transform"
+          className="w-16 h-16 bg-white rounded-full text-rose-500 shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform border border-gray-100"
         >
-          ✕
+          <X size={36} strokeWidth={3} />
         </button>
+
+        {/* Super Like */}
         <button
           onClick={() => alert("Super Like functionality coming soon!")}
-          className="w-14 h-14 bg-white rounded-full shadow-lg flex items-center justify-center text-blue-400 text-2xl hover:scale-110 active:scale-95 transition-transform"
+          className="w-12 h-12 bg-white rounded-full text-blue-500 shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform border border-gray-100 relative -top-2"
         >
-          ★
+          <Star size={24} strokeWidth={0} fill="currentColor" />
         </button>
+
+        {/* Like */}
         <button
           onClick={() => profiles.length > 0 && handleSwipe("right", profiles[0].id)}
-          className="w-14 h-14 bg-white rounded-full shadow-lg flex items-center justify-center text-green-400 text-2xl hover:scale-110 active:scale-95 transition-transform"
+          className="w-16 h-16 bg-white rounded-full text-green-400 shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform border border-gray-100"
         >
-          ♥
+          <Heart size={36} strokeWidth={0} fill="currentColor" />
+        </button>
+
+        {/* Boost (Dummy) */}
+        <button
+          onClick={() => alert("Boost requires Premium!")}
+          className="w-12 h-12 bg-white rounded-full text-purple-500 shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform border border-gray-100"
+        >
+          <Zap size={22} strokeWidth={0} fill="currentColor" />
         </button>
       </div>
 
       {lastDirection && (
-        <div className="absolute top-10 text-gray-400 text-sm">
-          Last swipe: {lastDirection.toUpperCase()}
+        <div className={`absolute top-20 font-bold px-6 py-2 rounded border-4 transform -rotate-6 z-50 animate-fade-out pointer-events-none ${lastDirection === 'right' ? 'border-green-400 text-green-400' : 'border-rose-500 text-rose-500'
+          }`}>
+          {lastDirection === 'right' ? 'LIKE' : 'NOPE'}
         </div>
       )}
     </div>
