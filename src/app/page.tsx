@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
@@ -182,15 +184,7 @@ export default function Home() {
       </div>
 
       {/* Action Buttons */}
-      <div className="mt-auto mb-8 flex items-center gap-5 z-20">
-        {/* Rewind (Dummy) */}
-        <button
-          onClick={() => alert("Rewind requires Premium!")}
-          className="w-12 h-12 bg-white rounded-full text-yellow-500 shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform border border-gray-100"
-        >
-          <RotateCw size={22} strokeWidth={2.5} />
-        </button>
-
+      <div className="mt-auto mb-8 flex items-center gap-8 z-20">
         {/* Nope */}
         <button
           onClick={() => profiles.length > 0 && handleSwipe("left", profiles[0].id)}
@@ -199,28 +193,12 @@ export default function Home() {
           <X size={36} strokeWidth={3} />
         </button>
 
-        {/* Super Like */}
-        <button
-          onClick={() => alert("Super Like functionality coming soon!")}
-          className="w-12 h-12 bg-white rounded-full text-blue-500 shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform border border-gray-100 relative -top-2"
-        >
-          <Star size={24} strokeWidth={0} fill="currentColor" />
-        </button>
-
         {/* Like */}
         <button
           onClick={() => profiles.length > 0 && handleSwipe("right", profiles[0].id)}
           className="w-16 h-16 bg-white rounded-full text-green-400 shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform border border-gray-100"
         >
           <Heart size={36} strokeWidth={0} fill="currentColor" />
-        </button>
-
-        {/* Boost (Dummy) */}
-        <button
-          onClick={() => alert("Boost requires Premium!")}
-          className="w-12 h-12 bg-white rounded-full text-purple-500 shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform border border-gray-100"
-        >
-          <Zap size={22} strokeWidth={0} fill="currentColor" />
         </button>
       </div>
 
