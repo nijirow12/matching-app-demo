@@ -148,57 +148,62 @@ export default function Home() {
   };
 
   if (loading || checkingProfile) {
-    return <div className="flex h-full items-center justify-center text-rose-500 font-bold animate-pulse">Loading profiles...</div>;
+    return (
+      <div className="flex h-[calc(100dvh-64px)] items-center justify-center text-rose-500 font-bold animate-pulse">
+        Loading profiles...
+      </div>
+    );
   }
 
   return (
-    <div className="flex flex-col items-center justify-between h-full min-h-[calc(100dvh-64px)] bg-slate-100 relative pb-[env(safe-area-inset-bottom)] overflow-y-auto overscroll-y-contain">
-
-      {/* Card Stack Container - Adjust height dynamically */}
-      <div className="w-full max-w-md h-full max-h-[72dvh] mt-2 relative px-2 flex-shrink-0">
-        {profiles.length > 0 ? (
-          profiles.map((profile, index) => {
-            return (
-              <SwipeCard
-                key={profile.id}
-                profile={profile}
-                onSwipe={(dir) => handleSwipe(dir, profile.id)}
-                style={{
-                  zIndex: profiles.length - index,
-                }}
-              />
-            );
-          })
-        ) : (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-4">
-            <div className="w-24 h-24 rounded-full bg-gray-200 animate-pulse" />
-            <p className="text-lg font-medium">No more profiles around you.</p>
-            <button
-              onClick={handleReset}
-              className="px-8 py-3 bg-gradient-to-r from-rose-500 to-orange-500 text-white rounded-full font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
-            >
-              Search Again
-            </button>
-          </div>
-        )}
+    <div className="flex flex-col items-center w-full h-[calc(100dvh-64px)] bg-slate-50 relative overflow-hidden">
+      {/* Card Stack Container - Fills available vertical space */}
+      <div className="flex-1 w-full max-w-md relative p-2 pb-0 flex flex-col justify-end">
+        <div className="relative w-full h-full">
+          {profiles.length > 0 ? (
+            profiles.map((profile, index) => {
+              return (
+                <SwipeCard
+                  key={profile.id}
+                  profile={profile}
+                  onSwipe={(dir) => handleSwipe(dir, profile.id)}
+                  style={{
+                    zIndex: profiles.length - index,
+                  }}
+                />
+              );
+            })
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-4">
+              <div className="w-24 h-24 rounded-full bg-gray-200 animate-pulse" />
+              <p className="text-lg font-medium">No more profiles around you.</p>
+              <button
+                onClick={handleReset}
+                className="px-8 py-3 bg-gradient-to-r from-rose-500 to-orange-500 text-white rounded-full font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+              >
+                Search Again
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Action Buttons - Fixed at bottom with safe area */}
-      <div className="flex items-center justify-center gap-10 w-full pb-6 pt-2">
+      {/* Action Buttons - Compact footer area */}
+      <div className="flex-none h-24 w-full flex items-center justify-center gap-8 pb-[env(safe-area-inset-bottom)] bg-slate-50 z-20">
         {/* Nope */}
         <button
           onClick={() => profiles.length > 0 && handleSwipe("left", profiles[0].id)}
-          className="w-16 h-16 bg-white rounded-full text-rose-500 shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform border border-gray-100"
+          className="w-14 h-14 bg-white rounded-full text-rose-500 shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-transform border border-gray-100"
         >
-          <X size={32} strokeWidth={3} />
+          <X size={30} strokeWidth={3} />
         </button>
 
         {/* Like */}
         <button
           onClick={() => profiles.length > 0 && handleSwipe("right", profiles[0].id)}
-          className="w-16 h-16 bg-white rounded-full text-green-400 shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform border border-gray-100"
+          className="w-14 h-14 bg-white rounded-full text-green-400 shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-transform border border-gray-100"
         >
-          <Heart size={32} strokeWidth={0} fill="currentColor" />
+          <Heart size={30} strokeWidth={0} fill="currentColor" />
         </button>
       </div>
 
