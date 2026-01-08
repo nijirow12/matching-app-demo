@@ -1,65 +1,187 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from "react";
+import { useAuth, useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { SwipeCard } from "@/components/SwipeCard";
+import { MOCK_PROFILES, Profile } from "@/lib/mockData";
+import { RefreshCw } from "lucide-react";
+import { createSupabaseClient } from "@/lib/supabase";
 
 export default function Home() {
+  const { getToken } = useAuth();
+  const { user, isLoaded } = useUser();
+  const router = useRouter();
+
+  // 配列の先頭が一番手前のカードになるように今回はそのまま使用するか、
+  // あるいはpopしていく形式にするか。
+  // 通常、スタックUIではindexが大きい方が手前、または0が手前で重なり順(zIndex)を制御する。
+  // ここでは profiles[0] を一番手前として扱うシンプルな実装にします。
+
+  // MOCK_PROFILESは初期値から削除、最初は空配列
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [lastDirection, setLastDirection] = useState<string | null>(null);
+  const [checkingProfile, setCheckingProfile] = useState(true);
+
+  // プロフィール存在確認と他ユーザーの取得
+  useEffect(() => {
+    const init = async () => {
+      if (!isLoaded || !user) return;
+
+      try {
+        const token = await getToken({ template: "supabase" });
+        const supabase = createSupabaseClient(token);
+
+        // 1. 自分のプロフィールチェック
+        const { data: myProfile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("id", user.id)
+          .single();
+
+        if (!myProfile) {
+          router.push("/profile");
+          return;
+        }
+
+        setCheckingProfile(false);
+
+        // 2. 他のユーザーを取得 (自分以外)
+        // 本来は位置情報(PostGIS)で近くのユーザーを絞り込むが、まずは全件取得
+        const { data: otherUsers, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .neq("id", user.id)
+          .limit(20);
+
+        if (error) {
+          console.error(error);
+        }
+
+        if (otherUsers) {
+          // Profile型に合わせる (distanceKmは仮計算または0)
+          const formattedUsers: Profile[] = otherUsers.map(u => ({
+            id: u.id,
+            name: u.name,
+            age: u.age,
+            bio: u.bio,
+            images: u.images || ["https://placehold.co/600x800?text=No+Image"], // 画像がない場合のダミー
+            distanceKm: 0, // あとで計算実装
+          }));
+          setProfiles(formattedUsers);
+        }
+
+      } catch (error) {
+        console.error("Init failed:", error);
+      } finally {
+        setLoading(false);
+        setCheckingProfile(false);
+      }
+    };
+
+    if (isLoaded && user) {
+      init();
+    } else if (isLoaded && !user) {
+      setLoading(false);
+      setCheckingProfile(false);
+    }
+  }, [isLoaded, user, getToken, router]);
+
+  const handleSwipe = async (direction: "left" | "right", targetId: string) => {
+    console.log(`Swiped ${direction} on ${targetId}`);
+    setLastDirection(direction);
+
+    // UI反映（カードを消す）
+    setTimeout(() => {
+      setProfiles((prev) => prev.filter((p) => p.id !== targetId));
+    }, 200);
+
+    // DB保存
+    if (user) {
+      const token = await getToken({ template: "supabase" });
+      const supabase = createSupabaseClient(token);
+
+      await supabase.from("swipes").insert({
+        swiper_id: user.id,
+        target_id: targetId,
+        direction: direction,
+      });
+
+      // マッチ判定が必要ならここでAPIを叩くか、Supabaseのトリガーなどで処理する
+    }
+  };
+
+  const handleReset = () => {
+    // リセット機能はデバッグ用に残すが、本来は「もうユーザーがいません」となるべき
+    // ここではページリロードするだけにする
+    window.location.reload();
+  };
+
+  if (loading || checkingProfile) {
+    return <div className="flex h-screen items-center justify-center text-rose-500 font-bold">Loading...</div>;
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] bg-gray-100 overflow-hidden relative">
+      <div className="w-full max-w-sm h-[600px] relative">
+        {profiles.length > 0 ? (
+          profiles.map((profile, index) => {
+            // 一番手前だけ操作可能にする
+            const isFront = index === 0;
+            return (
+              <SwipeCard
+                key={profile.id}
+                profile={profile}
+                onSwipe={(dir) => handleSwipe(dir, profile.id)}
+                style={{
+                  zIndex: profiles.length - index, // 手前ほどzIndex高く
+                  // 後ろのカードは少し小さく見せるなどの演出も本来はここに
+                }}
+              />
+            );
+          })
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full text-gray-500">
+            <p className="text-xl mb-4">No more profiles!</p>
+            <button
+              onClick={handleReset}
+              className="flex items-center gap-2 px-6 py-3 bg-rose-500 text-white rounded-full font-bold shadow-lg hover:bg-rose-600 transition-colors"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              <RefreshCw size={20} />
+              Reset
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* アクションボタン */}
+      <div className="mt-8 flex gap-6 z-10">
+        <button
+          onClick={() => profiles.length > 0 && handleSwipe("left", profiles[0].id)}
+          className="w-14 h-14 bg-white rounded-full shadow-lg flex items-center justify-center text-red-500 text-2xl hover:scale-110 active:scale-95 transition-transform"
+        >
+          ✕
+        </button>
+        <button
+          onClick={() => alert("Super Like functionality coming soon!")}
+          className="w-14 h-14 bg-white rounded-full shadow-lg flex items-center justify-center text-blue-400 text-2xl hover:scale-110 active:scale-95 transition-transform"
+        >
+          ★
+        </button>
+        <button
+          onClick={() => profiles.length > 0 && handleSwipe("right", profiles[0].id)}
+          className="w-14 h-14 bg-white rounded-full shadow-lg flex items-center justify-center text-green-400 text-2xl hover:scale-110 active:scale-95 transition-transform"
+        >
+          ♥
+        </button>
+      </div>
+
+      {lastDirection && (
+        <div className="absolute top-10 text-gray-400 text-sm">
+          Last swipe: {lastDirection.toUpperCase()}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      )}
     </div>
   );
 }
