@@ -34,11 +34,11 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="ja">
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 h-[100dvh] w-screen overflow-hidden overscroll-none touch-pan-y`}
+          className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 h-[100dvh] w-screen`}
         >
           <SignedIn>
             <Header />
-            <main className="h-[100dvh] pt-16 w-full overflow-hidden relative">
+            <main className="h-[100dvh] pt-16 w-full relative">
               {children}
             </main>
           </SignedIn>

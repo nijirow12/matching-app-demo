@@ -152,7 +152,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-between h-full bg-slate-100 relative pb-[env(safe-area-inset-bottom)]">
+    <div className="flex flex-col items-center justify-between h-full min-h-[calc(100dvh-64px)] bg-slate-100 relative pb-[env(safe-area-inset-bottom)] overflow-y-auto overscroll-y-contain">
 
       {/* Card Stack Container - Adjust height dynamically */}
       <div className="w-full max-w-md h-full max-h-[72dvh] mt-2 relative px-2 flex-shrink-0">
