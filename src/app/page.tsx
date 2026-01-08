@@ -127,13 +127,26 @@ export default function Home() {
       const token = await getToken({ template: "supabase" });
       const supabase = createSupabaseClient(token);
 
-      await supabase.from("swipes").insert({
-        swiper_id: user.id,
-        target_id: targetId,
-        direction: direction,
-      });
-
-      // マッチ判定が必要ならここでAPIを叩くか、Supabaseのトリガーなどで処理する
+      if (direction === "right") {
+        // RPCを使ってLike & マッチ判定
+        const { data: result, error } = await supabase.rpc("like_user", {
+          current_user_id: user.id,
+          target_user_id: targetId
+        });
+        if (error) {
+          console.error("Like error:", error);
+        } else if (result?.is_match) {
+          // マッチした場合の演出（簡易アラート）
+          alert("It's a Match! 🎉");
+        }
+      } else {
+        // Nopeの場合は通常のInsert (制約がないので単純Insert)
+        await supabase.from("swipes").insert({
+          swiper_id: user.id,
+          target_id: targetId,
+          direction: direction,
+        });
+      }
     }
   };
 

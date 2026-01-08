@@ -39,18 +39,17 @@ export default function ChatListPage() {
                 const token = await getToken({ template: "supabase" });
                 const supabase = createSupabaseClient(token);
 
-                // 1. マッチ済みのユーザー取得
-                // matchesビューから自分が関わっているペアを取得
-                const { data: matchData, error: matchError } = await supabase
-                    .from("matches")
-                    .select("user_id_1, user_id_2")
-                    .or(`user_id_1.eq.${user.id},user_id_2.eq.${user.id}`);
+                // 1. マッチ済みのユーザー取得 (RPC使用)
+                const { data: matchedIdsData, error: matchError } = await supabase
+                    .rpc('get_matched_user_ids', { current_user_id: user.id });
+
+                if (matchError) console.error("Match fetch error:", matchError);
 
                 const matchedIds = new Set<string>();
-                if (matchData) {
-                    matchData.forEach((m: any) => {
-                        const partnerId = m.user_id_1 === user.id ? m.user_id_2 : m.user_id_1;
-                        matchedIds.add(partnerId);
+                if (matchedIdsData) {
+                    matchedIdsData.forEach((item: any) => {
+                        const id = typeof item === 'string' ? item : item.get_matched_user_ids || Object.values(item)[0];
+                        matchedIds.add(String(id));
                     });
                 }
 
@@ -125,19 +124,23 @@ export default function ChatListPage() {
 
     // Likeバックする処理 (Likes Youタブから)
     const handleLikeBack = async (targetId: string) => {
-        // Like保存 -> マッチ成立 -> リスト更新
         if (!user) return;
         const token = await getToken({ template: "supabase" });
         const supabase = createSupabaseClient(token);
 
-        await supabase.from("swipes").insert({
-            swiper_id: user.id,
-            target_id: targetId,
-            direction: "right"
+        const { error } = await supabase.rpc("like_user", {
+            current_user_id: user.id,
+            target_user_id: targetId
         });
 
+        if (error) {
+            console.error(error);
+            alert(`Failed to match: ${error.message}`); // 詳細を表示
+            return;
+        }
+
         alert("It's a Match! 🎉");
-        window.location.reload(); // 簡易的にリロード
+        window.location.reload(); // リロードしてChatsタブに移動させる
     };
 
     if (loading) return <div className="p-8 text-center text-rose-500">Loading...</div>;
