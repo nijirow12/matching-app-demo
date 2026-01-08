@@ -32,7 +32,8 @@ export function SwipeCard({ profile, onSwipe, style }: SwipeCardProps) {
             setExitX(-200);
             onSwipe("left");
         } else {
-            // 元に戻る
+            // 元に戻る際は明示的にモーション値をリセット
+            x.set(0);
         }
     };
 
