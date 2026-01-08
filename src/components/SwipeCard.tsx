@@ -23,7 +23,14 @@ export function SwipeCard({ profile, onSwipe, style }: SwipeCardProps) {
     const likeOpacity = useTransform(x, [10, 100], [0, 1]);
     const nopeOpacity = useTransform(x, [-10, -100], [0, 1]);
 
+    const [isDragging, setIsDragging] = useState(false);
+
+    const handleDragStart = () => {
+        setIsDragging(true);
+    };
+
     const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+        setIsDragging(false);
         const threshold = 100;
         if (info.offset.x > threshold) {
             setExitX(200);
@@ -62,6 +69,7 @@ export function SwipeCard({ profile, onSwipe, style }: SwipeCardProps) {
             }}
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
+            onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             animate={exitX ? { x: exitX, opacity: 0 } : { x: 0, opacity: 1 }}
             transition={{ duration: 0.2 }}
@@ -104,20 +112,24 @@ export function SwipeCard({ profile, onSwipe, style }: SwipeCardProps) {
                 </div>
 
                 {/* Like印 */}
-                <motion.div
-                    style={{ opacity: likeOpacity }}
-                    className="absolute top-10 left-6 border-[6px] border-green-400 rounded-lg px-4 py-1 rotate-[-15deg] z-20"
-                >
-                    <span className="text-4xl font-extrabold text-green-400 uppercase tracking-widest">LIKE</span>
-                </motion.div>
+                {(isDragging || exitX) && (
+                    <motion.div
+                        style={{ opacity: likeOpacity }}
+                        className="absolute top-10 left-6 border-[6px] border-green-400 rounded-lg px-4 py-1 rotate-[-15deg] z-20"
+                    >
+                        <span className="text-4xl font-extrabold text-green-400 uppercase tracking-widest">LIKE</span>
+                    </motion.div>
+                )}
 
                 {/* Nope印 */}
-                <motion.div
-                    style={{ opacity: nopeOpacity }}
-                    className="absolute top-10 right-6 border-[6px] border-rose-500 rounded-lg px-4 py-1 rotate-[15deg] z-20"
-                >
-                    <span className="text-4xl font-extrabold text-rose-500 uppercase tracking-widest">NOPE</span>
-                </motion.div>
+                {(isDragging || exitX) && (
+                    <motion.div
+                        style={{ opacity: nopeOpacity }}
+                        className="absolute top-10 right-6 border-[6px] border-rose-500 rounded-lg px-4 py-1 rotate-[15deg] z-20"
+                    >
+                        <span className="text-4xl font-extrabold text-rose-500 uppercase tracking-widest">NOPE</span>
+                    </motion.div>
+                )}
 
                 {/* テキスト情報 (オーバーレイ) */}
                 <div className="absolute bottom-0 left-0 right-0 p-6 text-white pb-8 z-10 pointer-events-none">
