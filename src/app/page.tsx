@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { SwipeCard } from "@/components/SwipeCard";
+import { SkeletonCard } from "@/components/SkeletonCard";
 import { MOCK_PROFILES, Profile } from "@/lib/mockData";
 import { RefreshCw, X, Heart, Star, Zap, RotateCw } from "lucide-react";
 import { createSupabaseClient } from "@/lib/supabase";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Home() {
   const { getToken } = useAuth();
@@ -15,7 +17,7 @@ export default function Home() {
 
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [lastDirection, setLastDirection] = useState<string | null>(null);
+
   const [checkingProfile, setCheckingProfile] = useState(true);
 
   // プロフィール存在確認と他ユーザーの取得
@@ -108,7 +110,6 @@ export default function Home() {
 
   const handleSwipe = async (direction: "left" | "right", targetId: string) => {
     console.log(`Swiped ${direction} on ${targetId}`);
-    setLastDirection(direction);
 
     // UI反映（カードを消す）
     setTimeout(() => {
@@ -149,8 +150,17 @@ export default function Home() {
 
   if (loading || checkingProfile) {
     return (
-      <div className="flex h-[calc(100dvh-64px)] items-center justify-center text-rose-500 font-bold animate-pulse">
-        Loading profiles...
+      <div className="flex flex-col items-center w-full h-[calc(100dvh-64px)] bg-slate-50 relative overflow-hidden">
+        <div className="flex-1 w-full max-w-md relative p-2 pb-0 flex flex-col justify-end">
+          <div className="relative w-full h-full">
+            <SkeletonCard />
+          </div>
+        </div>
+        {/* Placeholder for action buttons to prevent layout shift */}
+        <div className="flex-none h-24 w-full flex items-center justify-center gap-8 pb-[env(safe-area-inset-bottom)] bg-slate-50 z-20 opacity-50 pointer-events-none">
+          <div className="w-14 h-14 bg-gray-200 rounded-full" />
+          <div className="w-14 h-14 bg-gray-200 rounded-full" />
+        </div>
       </div>
     );
   }
@@ -207,12 +217,7 @@ export default function Home() {
         </button>
       </div>
 
-      {lastDirection && (
-        <div className={`absolute top-20 font-bold px-6 py-2 rounded border-4 transform -rotate-6 z-50 animate-fade-out pointer-events-none ${lastDirection === 'right' ? 'border-green-400 text-green-400' : 'border-rose-500 text-rose-500'
-          }`}>
-          {lastDirection === 'right' ? 'LIKE' : 'NOPE'}
-        </div>
-      )}
+
     </div>
   );
 }

@@ -38,11 +38,14 @@ export function SwipeCard({ profile, onSwipe, style }: SwipeCardProps) {
 
     const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
         const threshold = 100;
-        if (info.offset.x > threshold) {
-            setExitX(200);
+        const velocityThreshold = 500; // フリックの速度しきい値
+
+        // ドラッグ距離が十分か、または勢いよくフリックされた場合
+        if (info.offset.x > threshold || info.velocity.x > velocityThreshold) {
+            setExitX(1000); // 画面外へ確実に出す
             onSwipe("right");
-        } else if (info.offset.x < -threshold) {
-            setExitX(-200);
+        } else if (info.offset.x < -threshold || info.velocity.x < -velocityThreshold) {
+            setExitX(-1000); // 画面外へ確実に出す
             onSwipe("left");
         } else {
             // 元に戻る際は明示的にモーション値をリセット
@@ -64,7 +67,7 @@ export function SwipeCard({ profile, onSwipe, style }: SwipeCardProps) {
         }
     };
 
-    const images = profile.images && profile.images.length > 0 ? profile.images : [profile.avatar_url || "https://placehold.co/600x800?text=No+Image"];
+    const images = profile.images && profile.images.length > 0 ? profile.images : ["https://placehold.co/600x800?text=No+Image"];
 
     return (
         <motion.div
@@ -76,10 +79,11 @@ export function SwipeCard({ profile, onSwipe, style }: SwipeCardProps) {
             }}
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.7} // バネのような抵抗感を追加
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             animate={exitX ? { x: exitX, opacity: 0 } : { x: 0, opacity: 1 }}
-            transition={{ duration: 0.2 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }} // バネ物理挙動
             className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing bg-white rounded-3xl shadow-xl overflow-hidden select-none"
         >
             {/* 画像 */}
