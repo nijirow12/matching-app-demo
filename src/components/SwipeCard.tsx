@@ -1,19 +1,43 @@
 "use client";
 
 import { motion, useMotionValue, useTransform, PanInfo, useMotionValueEvent } from "framer-motion";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Profile } from "@/lib/mockData";
-import { X, Heart } from "lucide-react";
+import { X, Heart, RefreshCw } from "lucide-react";
 
 interface SwipeCardProps {
     profile: Profile;
     onSwipe: (direction: "left" | "right") => void;
     style?: React.CSSProperties; // zIndex等の制御用
+    isActive?: boolean; // 画像を読み込むかどうか
 }
 
-export function SwipeCard({ profile, onSwipe, style }: SwipeCardProps) {
+export function SwipeCard({ profile, onSwipe, style, isActive = true }: SwipeCardProps) {
     const [exitX, setExitX] = useState<number | null>(null);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [imageError, setImageError] = useState<Record<number, boolean>>({});
+    const [retryCount, setRetryCount] = useState<Record<number, number>>({});
+    const [cacheBuster, setCacheBuster] = useState<Record<number, string>>({});
+
+    const handleImageError = (index: number) => {
+        const currentRetries = retryCount[index] || 0;
+        if (currentRetries < 3) {
+            // 自動リトライ: キャッシュバスティング用のクエリパラメータを追加
+            setRetryCount(prev => ({ ...prev, [index]: currentRetries + 1 }));
+            setCacheBuster(prev => ({ ...prev, [index]: Date.now().toString() }));
+        } else {
+            // リトライ上限に達した場合はエラー表示
+            setImageError((prev) => ({ ...prev, [index]: true }));
+        }
+    };
+
+    const handleManualRetry = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        const index = currentImageIndex;
+        setImageError((prev) => ({ ...prev, [index]: false }));
+        setRetryCount((prev) => ({ ...prev, [index]: 0 }));
+        setCacheBuster((prev) => ({ ...prev, [index]: Date.now().toString() }));
+    };
 
     const x = useMotionValue(0);
     const rotate = useTransform(x, [-200, 200], [-25, 25]);
@@ -69,6 +93,19 @@ export function SwipeCard({ profile, onSwipe, style }: SwipeCardProps) {
 
     const images = profile.images && profile.images.length > 0 ? profile.images : ["https://placehold.co/600x800?text=No+Image"];
 
+    const getImageUrl = (index: number) => {
+        const baseUrl = images[index];
+        const buster = cacheBuster[index];
+        if (!buster) return baseUrl;
+
+        const url = new URL(baseUrl);
+        url.searchParams.set("t", buster);
+        return url.toString();
+    };
+
+    const currentImageUrl = getImageUrl(currentImageIndex);
+    const isErrored = imageError[currentImageIndex];
+
     return (
         <motion.div
             style={{
@@ -87,13 +124,34 @@ export function SwipeCard({ profile, onSwipe, style }: SwipeCardProps) {
             className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing bg-white rounded-3xl shadow-xl overflow-hidden select-none"
         >
             {/* 画像 */}
-            <div className="relative h-full w-full bg-gray-200">
-                <img
-                    src={images[currentImageIndex]}
-                    alt={profile.name}
-                    className="h-full w-full object-cover pointer-events-none"
-                    draggable={false}
-                />
+            <div className="relative h-full w-full bg-gray-200 flex items-center justify-center">
+                {isActive ? (
+                    <>
+                        {!isErrored ? (
+                            <img
+                                key={`${currentImageIndex}-${cacheBuster[currentImageIndex]}`}
+                                src={currentImageUrl}
+                                alt={profile.name}
+                                className="h-full w-full object-cover pointer-events-none"
+                                draggable={false}
+                                onError={() => handleImageError(currentImageIndex)}
+                            />
+                        ) : (
+                            <div className="flex flex-col items-center gap-4 p-6 text-center">
+                                <span className="text-gray-500 font-medium">Image Load Error</span>
+                                <button
+                                    onClick={handleManualRetry}
+                                    className="flex items-center gap-2 px-4 py-2 bg-white/80 rounded-full shadow-sm hover:bg-white transition-colors text-slate-800 font-bold z-30"
+                                >
+                                    <RefreshCw size={18} />
+                                    Retry
+                                </button>
+                            </div>
+                        )}
+                    </>
+                ) : (
+                    <div className="text-gray-400 font-medium animate-pulse">Loading...</div>
+                )}
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/90" />
 
                 {/* 画像インジケーター */}

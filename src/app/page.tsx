@@ -180,6 +180,7 @@ export default function Home() {
                   style={{
                     zIndex: profiles.length - index,
                   }}
+                  isActive={index < 3} // 上位3枚のみ画像を読み込む
                 />
               );
             })
